@@ -1,239 +1,391 @@
-# Gaming Platform Infrastructure
+# Tech Challenge - Fase 3
 
 ## Overview
 
-This repository contains all infrastructure resources required to deploy and run the Gaming Platform microservices.
+This project implements a distributed microservices architecture for the FIAP Cloud Games platform.
 
-It centralizes Docker Compose orchestration, Kubernetes manifests, infrastructure configuration, and deployment resources.
-
----
-
-## Solution Architecture
-
-The platform follows a Microservices Architecture combined with Event-Driven Architecture.
-
-### Microservices
-
-- UsersAPI
-- CatalogAPI
-- PaymentsAPI
-- NotificationsAPI
-
-### Infrastructure Components
-
-- PostgreSQL
-- RabbitMQ
+The solution was enhanced during Phase 3 to address scalability, observability, performance, security, and infrastructure optimization requirements through the adoption of modern cloud-native technologies.
 
 ---
 
-## Architectural Principles
-
-### Microservices
-
-Each service has:
-
-- Independent responsibility
-- Independent deployment
-- Independent scalability
-- Isolated business logic
-
-### Event-Driven Architecture
-
-Services communicate asynchronously using RabbitMQ and MassTransit.
-
-This approach minimizes coupling and improves system scalability.
-
----
-
-## Registration Workflow
+# Architecture
 
 ```text
-UsersAPI
-    │
-    ▼
-UserCreatedEvent
-    │
-    ▼
-NotificationsAPI
+                     Internet
+                         │
+                         ▼
+                 Kong API Gateway
+                         │
+ ┌───────────────┬───────────────┬───────────────┐
+ │               │               │               │
+ ▼               ▼               ▼               ▼
+UsersAPI     CatalogAPI     PaymentsAPI    Notifications
+                                             Lambda
+                                                    ▲
+                                                    │
+                                            Amazon SQS
 ```
 
-### Description
-
-1. User registers.
-2. UsersAPI publishes UserCreatedEvent.
-3. NotificationsAPI receives the event.
-4. Welcome email is sent.
-
----
-
-## Purchase Workflow
+Supporting Services:
 
 ```text
-CatalogAPI
-    │
-    ▼
-OrderPlacedEvent
-    │
-    ▼
-PaymentsAPI
-    │
-    ▼
-PaymentProcessedEvent
-    │
-    ├────► CatalogAPI
-    │
-    └────► NotificationsAPI
+PostgreSQL
+Redis
+MongoDB
+RabbitMQ
+Prometheus
+Grafana
+AWS Lambda
+Amazon SQS
 ```
-
-### Description
-
-1. User requests a purchase.
-2. CatalogAPI publishes OrderPlacedEvent.
-3. PaymentsAPI processes payment.
-4. PaymentProcessedEvent is published.
-5. CatalogAPI updates the user's library.
-6. NotificationsAPI sends purchase confirmation.
 
 ---
 
-## Technologies
+# Microservices
 
-- .NET 8
+## UsersAPI
+
+Responsible for:
+
+- User registration
+- Authentication
+- JWT generation
+- User management
+
+Technology:
+
 - ASP.NET Core
 - PostgreSQL
 - RabbitMQ
-- MassTransit
-- Docker Compose
-- Kubernetes
 
 ---
 
-## Docker Compose
+## CatalogAPI
 
-Infrastructure services:
+Responsible for:
 
+- Game catalog management
+- User library management
+- Reviews management
+
+Technology:
+
+- ASP.NET Core
 - PostgreSQL
+- Redis
+- MongoDB
 - RabbitMQ
 
-Application services:
+---
+
+## PaymentsAPI
+
+Responsible for:
+
+- Payment processing
+- Event publishing
+
+Technology:
+
+- ASP.NET Core
+- RabbitMQ
+
+---
+
+## Notifications Lambda
+
+Responsible for:
+
+- Welcome notifications
+- Purchase confirmation notifications
+- Payment rejection notifications
+
+Technology:
+
+- AWS Lambda
+- Amazon SQS
+
+Repository:
+
+```text
+notifications-lambda
+```
+
+---
+
+# API Gateway
+
+## Kong
+
+A Kong API Gateway was introduced as the single entry point of the platform.
+
+Responsibilities:
+
+- Request routing
+- Traffic management
+- Centralized access point
+
+Example routes:
+
+```text
+/users
+/catalog
+/payments
+```
+
+---
+
+# Observability
+
+## Prometheus
+
+Prometheus is responsible for collecting application metrics.
+
+Collected metrics include:
+
+- Total requests
+- Request duration
+- Active requests
+- API performance indicators
+
+---
+
+## Grafana
+
+Grafana dashboards provide real-time visibility into application behavior.
+
+Monitored indicators:
+
+- Request count
+- Request latency
+- Active requests
+- Service health
+
+---
+
+# Distributed Cache
+
+## Redis
+
+Redis was introduced to improve application performance and reduce database load.
+
+Implementation:
+
+```text
+CatalogAPI
+    ↓
+Redis Cache
+    ↓
+PostgreSQL
+```
+
+Cached resource:
+
+```text
+GET /games
+```
+
+Benefits:
+
+- Reduced latency
+- Reduced database queries
+- Faster responses
+
+---
+
+# Polyglot Persistence
+
+## MongoDB
+
+MongoDB was introduced for storing game reviews.
+
+Collection:
+
+```text
+reviews
+```
+
+Example document:
+
+```json
+{
+  "gameId": "11111111-1111-1111-1111-111111111111",
+  "userId": "22222222-2222-2222-2222-222222222222",
+  "rating": 5,
+  "comment": "Excellent game"
+}
+```
+
+Benefits:
+
+- Flexible schema
+- NoSQL persistence
+- Better support for document-oriented data
+
+---
+
+# Messaging
+
+## RabbitMQ
+
+RabbitMQ remains responsible for communication between core microservices.
+
+Published events include:
+
+- UserCreatedEvent
+- PaymentProcessedEvent
+
+---
+
+# Serverless Architecture
+
+## Amazon SQS
+
+Queue:
+
+```text
+notifications-queue
+```
+
+Purpose:
+
+- Decouple services
+- Process notifications asynchronously
+
+---
+
+## AWS Lambda
+
+Function:
+
+```text
+notifications-lambda
+```
+
+Purpose:
+
+- Process notification events
+- Replace the previous NotificationsAPI container
+- Reduce infrastructure costs
+
+Architecture:
+
+```text
+Amazon SQS
+        ↓
+notifications-queue
+        ↓
+notifications-lambda
+        ↓
+Notification Processing
+```
+
+Benefits:
+
+- Event-driven processing
+- Automatic scaling
+- Reduced resource consumption
+- No continuously running container
+
+---
+
+# Technology Stack
+
+## Backend
+
+- .NET 8
+- ASP.NET Core
+
+## Databases
+
+- PostgreSQL
+- MongoDB
+
+## Cache
+
+- Redis
+
+## Messaging
+
+- RabbitMQ
+- Amazon SQS
+
+## Observability
+
+- Prometheus
+- Grafana
+
+## Cloud
+
+- AWS Lambda
+
+## API Gateway
+
+- Kong
+
+---
+
+# Repositories
+
+## Application
+
+```text
+game-store
+```
+
+Contains:
 
 - UsersAPI
 - CatalogAPI
 - PaymentsAPI
-- NotificationsAPI
-
-### Start Environment
-
-```bash
-docker compose up --build
-```
-
-### Stop Environment
-
-```bash
-docker compose down
-```
+- Shared
 
 ---
 
-## Kubernetes Resources
+## Infrastructure
 
-### Deployments
+```text
+game-store-infra
+```
 
-- users-api-deployment.yaml
-- catalog-api-deployment.yaml
-- payments-api-deployment.yaml
-- notifications-api-deployment.yaml
-- postgres-deployment.yaml
-- rabbitmq-deployment.yaml
+Contains:
 
-### Services
-
-- users-api-service.yaml
-- catalog-api-service.yaml
-- payments-api-service.yaml
-- notifications-api-service.yaml
-- postgres-service.yaml
-- rabbitmq-service.yaml
-
-### Configuration
-
-- configmap.yaml
-- secret.yaml
-
-### Namespace
-
-- namespace.yaml
+- Docker Compose
+- Kong Configuration
+- Prometheus Configuration
+- Grafana Configuration
 
 ---
 
-## ConfigMap
+## Serverless
 
-Stores non-sensitive configuration values:
+```text
+notifications-lambda
+```
 
-- Environment names
-- Internal service URLs
-- RabbitMQ host
-- Database host
+Contains:
+
+- AWS Lambda implementation
+- Notification handlers
+- Event models
 
 ---
 
-## Secrets
+# Phase 3 Requirements Coverage
 
-Stores sensitive information:
-
-- PostgreSQL credentials
-- RabbitMQ credentials
-- JWT signing key
-- Connection strings
-
----
-
-## Deployment Process
-
-### Create Namespace
-
-```bash
-kubectl apply -f namespace.yaml
-```
-
-### Create ConfigMap
-
-```bash
-kubectl apply -f configmap.yaml
-```
-
-### Create Secret
-
-```bash
-kubectl apply -f secret.yaml
-```
-
-### Deploy Resources
-
-```bash
-kubectl apply -f .
-```
-
-### Verify Resources
-
-```bash
-kubectl get deployments
-kubectl get pods
-kubectl get services
-```
+| Requirement | Status |
+|------------|---------|
+| API Gateway | ✅ |
+| Serverless Architecture | ✅ |
+| Observability | ✅ |
+| MongoDB / NoSQL | ✅ |
+| Redis Cache | ✅ |
+| Distributed Messaging | ✅ |
 
 ---
 
-## Project Goal
+# Team
 
-This project was developed as part of the FIAP Tech Challenge Phase 2, demonstrating:
+FIAP Tech Challenge - Phase 3
 
-- Microservices Architecture
-- Event-Driven Communication
-- Docker Compose Orchestration
-- Kubernetes Deployments
-- Configuration Management with ConfigMaps
-- Secret Management with Kubernetes Secrets
-
----
+Microservices Modernization and Cloud Native Architecture
