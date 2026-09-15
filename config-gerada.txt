@@ -1,0 +1,79 @@
+name: game-store-infra
+services:
+  catalog-api:
+    build:
+      context: /mnt/c/Fiap/game-store-infra/src/microservices/CatalogAPI
+      dockerfile: Dockerfile
+    depends_on:
+      rabbitmq:
+        condition: service_started
+        required: true
+    networks:
+      default: null
+    ports:
+      - mode: ingress
+        target: 80
+        published: "5002"
+        protocol: tcp
+  notifications-api:
+    build:
+      context: /mnt/c/Fiap/game-store-infra/src/microservices/NotificationsAPI
+      dockerfile: Dockerfile
+    depends_on:
+      rabbitmq:
+        condition: service_started
+        required: true
+    networks:
+      default: null
+    ports:
+      - mode: ingress
+        target: 80
+        published: "5004"
+        protocol: tcp
+  payments-api:
+    build:
+      context: /mnt/c/Fiap/game-store-infra/src/microservices/PaymentsAPI
+      dockerfile: Dockerfile
+    depends_on:
+      rabbitmq:
+        condition: service_started
+        required: true
+    networks:
+      default: null
+    ports:
+      - mode: ingress
+        target: 80
+        published: "5003"
+        protocol: tcp
+  rabbitmq:
+    container_name: rabbitmq
+    image: rabbitmq:3-management
+    networks:
+      default: null
+    ports:
+      - mode: ingress
+        target: 5672
+        published: "5672"
+        protocol: tcp
+      - mode: ingress
+        target: 15672
+        published: "15673"
+        protocol: tcp
+  users-api:
+    build:
+      context: /mnt/c/Fiap/game-store-infra/src/microservices/UsersAPI
+      dockerfile: Dockerfile
+    depends_on:
+      rabbitmq:
+        condition: service_started
+        required: true
+    networks:
+      default: null
+    ports:
+      - mode: ingress
+        target: 80
+        published: "5001"
+        protocol: tcp
+networks:
+  default:
+    name: game-store-infra_default

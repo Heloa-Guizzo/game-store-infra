@@ -1,0 +1,35 @@
+_format_version: "3.0"
+
+services:
+
+  - name: users-api
+    url: http://users-api:8080
+    routes:
+      - name: users-route
+        paths:
+          - /users
+
+  - name: catalog-api
+    url: http://catalog-api:8080
+    routes:
+
+      - name: catalog-route
+        paths:
+          - /catalog
+
+      - name: games-route
+        paths:
+          - /games
+        strip_path: false
+
+      - name: reviews-route
+        paths:
+          - /reviews
+        strip_path: false
+
+  - name: payments-api
+    url: http://payments-api:8080
+    routes:
+      - name: payments-route
+        paths:
+          - /payments

@@ -1,0 +1,36 @@
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15673:15672"
+
+  users-api:
+    build: ./src/microservices/UsersAPI
+    ports:
+      - "5001:80"
+    depends_on:
+      - rabbitmq
+
+  catalog-api:
+    build: ./src/microservices/CatalogAPI
+    ports:
+      - "5002:80"
+    depends_on:
+      - rabbitmq
+
+  payments-api:
+    build: ./src/microservices/PaymentsAPI
+    ports:
+      - "5003:80"
+    depends_on:
+      - rabbitmq
+
+  notifications-api:
+    build: ./src/microservices/NotificationsAPI
+    ports:
+      - "5004:80"
+    depends_on:
+      - rabbitmq

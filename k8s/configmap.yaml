@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gaming-platform-config
+  namespace: gamestore
+
+data:
+  ASPNETCORE_ENVIRONMENT: Development
+
+  RABBITMQ_HOST: rabbitmq
+
+  POSTGRES_HOST: postgres
+  POSTGRES_DATABASE: GameStoreDb
+
+  JWT_ISSUER: GameStore
+
+  USERS_API_URL: http://users-api
+  CATALOG_API_URL: http://catalog-api
+  PAYMENTS_API_URL: http://payments-api
+  NOTIFICATIONS_API_URL: http://notifications-api
